@@ -114,6 +114,18 @@ export default {
           icon: 'smile',
           component: './Welcome',
         },
+        {
+          path: '/sys',
+          name: '系统',
+          icon: 'cloud-sync',
+          routes: [
+            {
+              path: '/sys/userPage',
+              name: '用户',
+              component: './Sys/userPage',
+            },
+          ],
+        },
       ],
     },
   ],
