@@ -1,5 +1,3 @@
-import mockjs from 'mockjs';
-
 function userList(req, res) {
   const dataSource = [
     {
@@ -19,7 +17,13 @@ function userList(req, res) {
     },
   ];
 
-  return res.json(dataSource);
+  const data = {
+    code: 200,
+    msg: '',
+    total: dataSource.length,
+    list: dataSource,
+  };
+  return res.json(data);
 }
 
 export default {

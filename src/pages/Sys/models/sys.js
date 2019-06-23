@@ -4,8 +4,12 @@ export default {
   namespace: 'sys',
 
   state: {
-    list: [],
-    a: 0,
+    data: {
+      code: 200,
+      msg: '',
+      total: 3,
+      list: [],
+    },
   },
 
   effects: {
