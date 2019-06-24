@@ -122,7 +122,7 @@ export default {
             {
               path: '/sys/userPage',
               name: '用户',
-              component: './Sys/userPage',
+              component: './Sys/UserPage',
             },
           ],
         },
