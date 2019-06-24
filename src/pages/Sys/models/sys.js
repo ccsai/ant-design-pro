@@ -1,4 +1,4 @@
-import { queryUserList } from '@/services/api';
+import { queryUserList, addUser } from '@/services/api';
 
 export default {
   namespace: 'sys',
@@ -19,6 +19,14 @@ export default {
         type: 'save',
         payload: response,
       });
+    },
+    *add({ payload, callback }, { call, put }) {
+      const response = yield call(addUser, payload);
+      yield put({
+        type: 'save',
+        payload: response,
+      });
+      if (callback) callback();
     },
   },
 
