@@ -29,7 +29,6 @@ function userList(req, res) {
 export default {
   'GET /api/userList': userList,
   'POST /api/userAdd': function(req, res) {
-    console.log(req);
     return res.json({ code: 200, msg: '' });
   },
 };

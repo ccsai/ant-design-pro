@@ -1,10 +1,10 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Component } from 'react';
 import { Table, Button, Modal, Form, Input, Radio } from 'antd';
 import { connect } from 'dva';
 
 const CreateForm = Form.create({ name: 'form_in_modal' })(
   // eslint-disable-next-line
-  class extends React.Component {
+  class extends Component {
     render() {
       const { visible, onCancel, onCreate, form } = this.props;
       const { getFieldDecorator } = form;
@@ -13,7 +13,7 @@ const CreateForm = Form.create({ name: 'form_in_modal' })(
           <Form layout="vertical">
             <Form.Item label="用户名">
               {getFieldDecorator('userName', {
-                rules: [{ required: true, message: '请输入用户明!' }],
+                rules: [{ required: true, message: '请输入用户名!' }],
               })(<Input />)}
             </Form.Item>
             <Form.Item label="姓名">
@@ -30,7 +30,6 @@ const CreateForm = Form.create({ name: 'form_in_modal' })(
   sys,
   loading: loading.models.sys,
 }))
-@Form.create()
 class UserPage extends PureComponent {
   state = {
     visible: false,
@@ -83,11 +82,14 @@ class UserPage extends PureComponent {
       }
       // console.log('Received values of form: ', values);
       const { dispatch } = this.props;
-      const a = dispatch({
+      dispatch({
         type: 'sys/add',
         payload: values,
+      }).then(() => {
+        dispatch({
+          type: 'sys/fetch',
+        });
       });
-      console.log(a);
 
       form.resetFields();
       this.setState({ visible: false });
@@ -118,6 +120,7 @@ class UserPage extends PureComponent {
         </Button>
 
         <Table
+          loading={loading}
           rowKey={data => data.userId}
           dataSource={list}
           columns={this.columns}
