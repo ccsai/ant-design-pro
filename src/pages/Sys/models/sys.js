@@ -22,6 +22,7 @@ export default {
     },
     * add({payload, callback}, {call, put}) {
       const response = yield call(addUser, payload);
+      console.log(payload)
       yield put({
         type: 'save',
         payload: response,
@@ -30,12 +31,7 @@ export default {
     },
     * detail({payload, callback}, {call, put}) {
       const response = yield call(detail, payload);
-      yield put({
-        type: 'save',
-        payload: response,
-      });
-      console.log(callback)
-      if (callback) callback();
+      if (callback) callback(response);
     },
   },
 

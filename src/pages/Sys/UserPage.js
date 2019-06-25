@@ -2,6 +2,8 @@ import React, {PureComponent, Component} from 'react';
 import {Table, Button, Modal, Form, Input, Radio} from 'antd';
 import {connect} from 'dva';
 
+import styles from './UserPage.less';
+
 const CreateForm = Form.create({name: 'form_in_modal'})(
   // eslint-disable-next-line
   class extends Component {
@@ -11,6 +13,9 @@ const CreateForm = Form.create({name: 'form_in_modal'})(
       return (
         <Modal visible={visible} title="用户表单" okText="保存" onCancel={onCancel} onOk={onCreate}>
           <Form layout="vertical">
+            <Form.Item label="用户编号" className={styles.hidden}>
+              {getFieldDecorator('userId')(<Input type="hidden"/>)}
+            </Form.Item>
             <Form.Item label="用户名">
               {getFieldDecorator('userName', {
                 rules: [{required: true, message: '请输入用户名!'}],
@@ -30,6 +35,7 @@ const CreateForm = Form.create({name: 'form_in_modal'})(
   sys,
   loading: loading.models.sys,
 }))
+@Form.create()
 class UserPage extends PureComponent {
   state = {
     visible: false,
@@ -75,10 +81,10 @@ class UserPage extends PureComponent {
         userId: userId
       },
       callback: response => {
-        console.log(response)
+        const {form} = this.updateFormRef.props;
+        form.setFieldsValue(response.row);
       }
     })
-    // console.log()
   };
 
 
