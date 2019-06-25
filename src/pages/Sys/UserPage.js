@@ -1,23 +1,23 @@
-import React, { PureComponent, Component } from 'react';
-import { Table, Button, Modal, Form, Input, Radio } from 'antd';
-import { connect } from 'dva';
+import React, {PureComponent, Component} from 'react';
+import {Table, Button, Modal, Form, Input, Radio} from 'antd';
+import {connect} from 'dva';
 
-const CreateForm = Form.create({ name: 'form_in_modal' })(
+const CreateForm = Form.create({name: 'form_in_modal'})(
   // eslint-disable-next-line
   class extends Component {
     render() {
-      const { visible, onCancel, onCreate, form } = this.props;
-      const { getFieldDecorator } = form;
+      const {visible, onCancel, onCreate, form} = this.props;
+      const {getFieldDecorator} = form;
       return (
         <Modal visible={visible} title="用户表单" okText="保存" onCancel={onCancel} onOk={onCreate}>
           <Form layout="vertical">
             <Form.Item label="用户名">
               {getFieldDecorator('userName', {
-                rules: [{ required: true, message: '请输入用户名!' }],
-              })(<Input />)}
+                rules: [{required: true, message: '请输入用户名!'}],
+              })(<Input/>)}
             </Form.Item>
             <Form.Item label="姓名">
-              {getFieldDecorator('realName')(<Input type="input" />)}
+              {getFieldDecorator('realName')(<Input type="input"/>)}
             </Form.Item>
           </Form>
         </Modal>
@@ -26,13 +26,14 @@ const CreateForm = Form.create({ name: 'form_in_modal' })(
   },
 );
 
-@connect(({ sys, loading }) => ({
+@connect(({sys, loading}) => ({
   sys,
   loading: loading.models.sys,
 }))
 class UserPage extends PureComponent {
   state = {
     visible: false,
+    modalOperateType: ''
   };
 
   columns = [
@@ -53,35 +54,52 @@ class UserPage extends PureComponent {
       title: '操作',
       render: (text, record) => (
         <span>
-          <a href="#">修改</a> | <a href="#">删除</a>
+          <a href="#" onClick={() => this.showUpdateModal(record.userId)}>修改</a> | <a href="#">删除</a>
         </span>
       ),
     },
   ];
 
-  showModal = () => {
-    this.setState({ visible: true });
+  showAddModal = () => {
+    this.setState({visible: true, modalOperateType: 'add'});
   };
 
+  showUpdateModal = (userId) => {
+    console.log(userId)
+    this.setState({visible: true, modalOperateType: 'update'});
+    // loa
+    const {dispatch} = this.props;
+    dispatch({
+      type: 'sys/detail',
+      payload: {
+        userId: userId
+      },
+      callback: response => {
+        console.log(response)
+      }
+    })
+    // console.log()
+  };
+
+
   handleCancel = () => {
-    this.setState({ visible: false });
+    this.setState({visible: false});
   };
 
   componentDidMount() {
-    const { dispatch } = this.props;
+    const {dispatch} = this.props;
     dispatch({
       type: 'sys/fetch',
     });
   }
 
   check = () => {
-    const { form } = this.updateFormRef.props;
+    const {form} = this.updateFormRef.props;
     form.validateFields((err, values) => {
       if (err) {
         return;
       }
-      // console.log('Received values of form: ', values);
-      const { dispatch } = this.props;
+      const {dispatch} = this.props;
       dispatch({
         type: 'sys/add',
         payload: values,
@@ -92,7 +110,7 @@ class UserPage extends PureComponent {
       });
 
       form.resetFields();
-      this.setState({ visible: false });
+      this.setState({visible: false});
     });
   };
 
@@ -103,7 +121,7 @@ class UserPage extends PureComponent {
   render() {
     const {
       sys: {
-        data: { total, list },
+        data: {total, list},
       },
       loading,
     } = this.props;
@@ -115,12 +133,12 @@ class UserPage extends PureComponent {
     };
     return (
       <div>
-        <Button type="primary" onClick={this.showModal}>
+        <Button type="primary" onClick={this.showAddModal}>
           添加
         </Button>
 
         <Table
-          loading={loading}
+          // loading={loading}
           rowKey={data => data.userId}
           dataSource={list}
           columns={this.columns}

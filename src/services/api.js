@@ -13,3 +13,13 @@ export async function addUser(params) {
     },
   });
 }
+
+export async function detail(params) {
+  return request('/api/detail', {
+    method: 'post',
+    data: {
+      ...params,
+      method: 'post',
+    },
+  });
+}
