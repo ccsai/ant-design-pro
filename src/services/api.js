@@ -1,7 +1,8 @@
 import request from '@/utils/request';
+import { stringify } from 'qs';
 
-export async function queryUserList() {
-  return request('/api/userList');
+export async function queryUserList(params) {
+  return request(`/api/userList?${stringify(params)}`);
 }
 
 export async function addUser(params) {
@@ -19,7 +20,17 @@ export async function detail(params) {
     method: 'post',
     data: {
       ...params,
-      method: 'post',
+      // method: 'post',
+    },
+  });
+}
+
+export async function update(params) {
+  return request('/api/update', {
+    method: 'post',
+    data: {
+      ...params,
+      // method: 'post',
     },
   });
 }
