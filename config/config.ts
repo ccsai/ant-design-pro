@@ -123,7 +123,24 @@ export default {
               path: '/sys/userPage',
               name: '用户',
               component: './Sys/UserPage',
+            }
+          ],
+        },
+        {
+          path: '/picture',
+          name: '图库管理',
+          icon: 'file',
+          routes: [
+            {
+              path: '/picture/project',
+              name: '项目管理',
+              component: './picture/ProjectPage',
             },
+            {
+              path: '/picture/test',
+              name: '待续',
+              // component: './Sys/UserPage',
+            }
           ],
         },
       ],
