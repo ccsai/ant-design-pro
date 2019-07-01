@@ -20,9 +20,12 @@ export default {
         payload: response,
       });
     },
-    * add({payload, callback}, {call, put}) {
+    * fetchUserList({payload,callback}, {call, put}) {
+      const response = yield call(queryUserList,payload);
+      if (callback) callback(response);
+    },
+    * add({payload, callbcallbackack}, {call, put}) {
       const response = yield call(addUser, payload);
-      console.log(payload)
       yield put({
         type: 'save',
         payload: response,

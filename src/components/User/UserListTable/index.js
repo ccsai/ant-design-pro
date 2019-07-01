@@ -5,7 +5,7 @@ import {PureComponent} from 'react';
 /**
  * 用户选择列表模态框
  */
-class UserListSelectModal extends PureComponent {
+class UserListTable extends PureComponent {
 
   columns = [
     {
@@ -25,26 +25,20 @@ class UserListSelectModal extends PureComponent {
 
 
   render() {
-    const {onOk, onCancel, visible, allUserList,rowSelection} = this.props;
+    const {dataSource,rowSelection} = this.props;
 
     return (
-      <Modal
-        title="用户选择"
-        okText="确认选择"
-        visible={visible}
-        onOk={onOk}
-        onCancel={onCancel}>
         <Table
           rowKey="userId"
           size="small"
           columns={this.columns}
-          dataSource={allUserList}
+          dataSource={dataSource}
+          pagination={false}
           pagination={false}
           rowSelection={rowSelection}
         />
-      </Modal>
     );
   }
 }
 
-export default UserListSelectModal;
+export default UserListTable;

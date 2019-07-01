@@ -2,6 +2,7 @@ import React, {PureComponent, Component} from 'react';
 import {Table, Button, Modal, Form, Input, Radio, Row, Col, Select} from 'antd';
 import {connect} from 'dva';
 import UserListSelectModal from '@/components/User/UserListSelectModal';
+import UserListTable from '@/components/User/UserListTable';
 
 import styles from './ProjectPage.less';
 
@@ -11,7 +12,6 @@ import styles from './ProjectPage.less';
 class ProjectTreeTable extends PureComponent {
   render() {
     const {columns, rows, loading, rowKey, paginationProps} = this.props;
-    // console.log(data)
     const pagination = {
       ...paginationProps
     }
@@ -34,29 +34,8 @@ class ProjectTreeTable extends PureComponent {
  */
 const AddForm = Form.create({name: 'add_form_dlg'})(
   class extends Component {
-    state = {
-      userListModalVisible: false
-    }
-
-
-    /*************用户选择模态框**************/
-    openUserListSelectModa = () => {
-      this.setState({userListModalVisible: true})
-      // const {dispatch} = this.props;
-      // dispatch({
-      //   type: 'sys/fetch',
-      //   callback(res){
-      //     console.log(res)
-      //   }
-      // })
-    }
-
-    closeUserListSElectModa = () => {
-      this.setState({userListModalVisible: false})
-    }
-
     render() {
-      const {form, visible, onCancel} = this.props;
+      const {form, visible, onCancel, openUserListModal,userList,projectUserRowSelection,removeProjectUser} = this.props;
       const {getFieldDecorator} = form;
       const {TextArea} = Input;
       return (
@@ -100,23 +79,25 @@ const AddForm = Form.create({name: 'add_form_dlg'})(
                 />)}
               </Form.Item>
               <Form.Item label="项目人员">
-                <Button type="primary" size="small" onClick={this.openUserListSelectModa}>添加</Button>
-                {getFieldDecorator('userList')(<Table />)}
+                <Button type="primary" size="small" onClick={openUserListModal}>添加</Button>
+                <Button size="small" onClick={removeProjectUser}>移出</Button>
+                {getFieldDecorator('userList')(
+                  <UserListTable
+                    dataSource={userList}
+                    rowSelection={projectUserRowSelection}
+                  />
+                )}
               </Form.Item>
             </Form>
           </Modal>
-
-          <UserListSelectModal
-            visible={this.state.userListModalVisible}
-            onOk={this.closeUserListSElectModa}
-            onCancel={this.closeUserListSElectModa}/>
         </div>
       );
     }
   },
 );
 
-@connect(({project, loading}) => ({
+@connect(({sys, project, loading}) => ({
+  sys,
   project,
   loading: loading.models.project,
 }))
@@ -124,7 +105,14 @@ class ProjectPage extends PureComponent {
 
   state = {
     paginationProps: {},
-    addFormVisible: false
+    addFormVisible: false,
+    userListModalVisible: false,
+    allUserList: [],
+    selectedUserIds: [],
+    selectedUserList: [],
+    projectRemoveUserIds: [],
+    projectUserList: [],
+    projectUserIds: []
   }
 
   projectTreeTableColums = [
@@ -169,6 +157,7 @@ class ProjectPage extends PureComponent {
 
   /*********** 添加表单对话框方法**************/
   showAddModal = () => {
+    this.setState({projectUserList: []});
     this.setState({addFormVisible: true})
   }
 
@@ -182,9 +171,52 @@ class ProjectPage extends PureComponent {
     form.resetFields();
   }
 
-  openAddFormModal = () => {
-    this.setState({addFormVisible: true})
+  removeProjectUser = () => {
+    let {allUserList,projectRemoveUserIds} = this.state;
+    if (projectRemoveUserIds.length > 0){
+      for(let i=0;i<projectRemoveUserIds.length;i++){
+        allUserList.splice(allUserList.findIndex(item => item.userId == projectRemoveUserIds[i]), 1)
+      }
+    }
+    console.log(allUserList)
+    this.setState({allUserList: allUserList})
   }
+
+  openUserListModal = () => {
+    this.setState({selectedUserIds: []});
+    this.setState({userListModalVisible: true})
+    const {dispatch} = this.props;
+    dispatch({
+      type: 'sys/fetchUserList',
+      callback: response => {
+        this.setState({allUserList: response.list})
+      }
+    });
+  }
+
+  /*************** 用户选择模态框 *******************/
+  closeUserListSelectModal = () => {
+    this.setState({userListModalVisible: false})
+  }
+
+  addSelectedUserList = () => {
+    this.setState({userListModalVisible: false})
+    const {selectedUserList,projectUserList} = this.state;
+    let userList = [
+      ...projectUserList,
+      ...selectedUserList
+    ]
+    var hash = {}
+    userList = userList.reduce(function (res,cur) {
+      if (!hash[cur.userId]){
+        hash[cur.userId] = true;
+        res.push(cur);
+      }
+      return res;
+    },[]);
+    this.setState({projectUserList: userList})
+  }
+
 
   render() {
     const {project, loading} = this.props;
@@ -195,6 +227,22 @@ class ProjectPage extends PureComponent {
       pageSize: 2,
       showTotal: total => total,
     }
+
+    {/*移出项目用户*/}
+    const projectUserRowSelection = {
+      onChange: (selectedRowKeys, selectedRows) => {
+        this.setState({projectRemoveUserIds: selectedRowKeys});
+      }
+    }
+
+    {/*用户选择的列表设置*/}
+    const userRowSelection = {
+      selectedRowKeys: this.state.selectedUserIds,
+      onChange: (selectedRowKeys, selectedRows) => {
+        this.setState({selectedUserList: selectedRows,selectedUserIds: selectedRowKeys});
+      }
+    }
+
     return (
       <div>
         <div className={styles.addBtn}>
@@ -208,11 +256,25 @@ class ProjectPage extends PureComponent {
             rows={rows}
             rowKey="projectId"/>
         </div>
+
+        {/*添加修改表单*/}
         <AddForm
           visible={this.state.addFormVisible}
           wrappedComponentRef={this.getAddFormRef}
           onCancel={this.closeAddFormModal}
-          onOk={this.openAddFormModal}/>
+          openUserListModal={this.openUserListModal}
+          userList={this.state.projectUserList}
+          projectUserRowSelection={projectUserRowSelection}
+          removeProjectUser={this.removeProjectUser}
+        />
+        {/*用户选择列表*/}
+        <UserListSelectModal
+          visible={this.state.userListModalVisible}
+          onOk={this.addSelectedUserList}
+          onCancel={this.closeUserListSelectModal}
+          allUserList={this.state.allUserList}
+          rowSelection={userRowSelection}
+        />
       </div>
     )
   }
