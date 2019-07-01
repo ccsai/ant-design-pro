@@ -172,14 +172,15 @@ class ProjectPage extends PureComponent {
   }
 
   removeProjectUser = () => {
-    let {allUserList,projectRemoveUserIds} = this.state;
+    let {projectUserList,projectRemoveUserIds} = this.state;
     if (projectRemoveUserIds.length > 0){
       for(let i=0;i<projectRemoveUserIds.length;i++){
-        allUserList.splice(allUserList.findIndex(item => item.userId == projectRemoveUserIds[i]), 1)
+        projectUserList.splice(projectUserList.findIndex(item => item.userId == projectRemoveUserIds[i]), 1)
       }
     }
-    console.log(allUserList)
-    this.setState({allUserList: allUserList})
+    console.log(projectUserList)
+    this.setState({projectUserList: projectUserList,projectRemoveUserIds: []})
+
   }
 
   openUserListModal = () => {
@@ -230,6 +231,7 @@ class ProjectPage extends PureComponent {
 
     {/*移出项目用户*/}
     const projectUserRowSelection = {
+      selectedRowKeys: this.state.projectRemoveUserIds,
       onChange: (selectedRowKeys, selectedRows) => {
         this.setState({projectRemoveUserIds: selectedRowKeys});
       }
