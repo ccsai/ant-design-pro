@@ -61,6 +61,80 @@ function treeTable(req,res) {
   return res.json(data);
 }
 
+
+function findLabelTree(req,res) {
+  let labelTree = [
+    {
+      labelId: '1',
+      labelName: '标签1',
+      children: [
+        {
+          labelId: '1.1',
+          labelName: '标签1.1',
+          children: [
+            {
+              labelId: '1.1.1',
+              labelName: '标签1.1.1',
+              children: [
+                {
+                  labelId: '1.1.1.1',
+                  labelName: '标签1.1.1.1',
+                },
+                {
+                  labelId: '1.1.1.2',
+                  labelName: '标签1.1.1.2',
+                },
+                {
+                  labelId: '1.1.1.3',
+                  labelName: '标签1.1.1.3',
+                },
+              ]
+            },
+            {
+              labelId: '1.1.2',
+              labelName: '标签1.1.2',
+            }
+          ]
+        },
+        {
+          labelId: '1.2',
+          labelName: '标签1.2',
+        },
+      ],
+    },
+    {
+      labelId: '2',
+      labelName: '标签2',
+      children: [
+        {
+          labelId: '2.1',
+          labelName: '标签2.1',
+        },
+        {
+          labelId: '2.2',
+          labelName: '标签2.2',
+        },
+      ]
+    },
+    {
+      labelId: '3',
+      labelName: '标签3',
+      children: [
+        {
+          labelId: '3.1',
+          labelName: '标签3.1',
+        },
+        {
+          labelId: '3.2',
+          labelName: '标签3.2',
+        },
+      ]
+    }
+  ]
+  return res.json(labelTree)
+}
+
 export default {
-  'POST /project/treeTable': treeTable
+  'POST /project/treeTable': treeTable,
+  'POST /project/labelTree': findLabelTree
 }

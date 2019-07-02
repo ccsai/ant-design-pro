@@ -3,6 +3,7 @@ import {Table, Button, Modal, Form, Input, Radio, Row, Col, Select} from 'antd';
 import {connect} from 'dva';
 import UserListSelectModal from '@/components/User/UserListSelectModal';
 import UserListTable from '@/components/User/UserListTable';
+import LabelTreeSelect from '@/components/Label/LabelTreeSelect';
 
 import styles from './ProjectPage.less';
 
@@ -35,7 +36,7 @@ class ProjectTreeTable extends PureComponent {
 const AddForm = Form.create({name: 'add_form_dlg'})(
   class extends Component {
     render() {
-      const {form, visible, onCancel, openUserListModal,userList,projectUserRowSelection,removeProjectUser} = this.props;
+      const {form, visible, onCancel, openUserListModal,userList,projectUserRowSelection,removeProjectUser,labelTreeData,labelTreeValue} = this.props;
       const {getFieldDecorator} = form;
       const {TextArea} = Input;
       return (
@@ -88,6 +89,14 @@ const AddForm = Form.create({name: 'add_form_dlg'})(
                   />
                 )}
               </Form.Item>
+              <Form.Item label="标签">
+                {getFieldDecorator('labels')(
+                  <LabelTreeSelect
+                    treeData={labelTreeData}
+                    labelTreeValue={labelTreeValue}
+                  />
+                )}
+              </Form.Item>
             </Form>
           </Modal>
         </div>
@@ -96,7 +105,8 @@ const AddForm = Form.create({name: 'add_form_dlg'})(
   },
 );
 
-@connect(({sys, project, loading}) => ({
+@connect(({label,sys, project, loading}) => ({
+  label,
   sys,
   project,
   loading: loading.models.project,
@@ -104,15 +114,17 @@ const AddForm = Form.create({name: 'add_form_dlg'})(
 class ProjectPage extends PureComponent {
 
   state = {
-    paginationProps: {},
-    addFormVisible: false,
-    userListModalVisible: false,
-    allUserList: [],
-    selectedUserIds: [],
-    selectedUserList: [],
-    projectRemoveUserIds: [],
-    projectUserList: [],
-    projectUserIds: []
+    paginationProps: {},//列表page
+    addFormVisible: false,//添加模态框显示状态
+    userListModalVisible: false,//用户选择模态框显示转台
+    allUserList: [],//所有用户
+    selectedUserIds: [],//已选择的用户编号
+    selectedUserList: [],//已选择的用户
+    projectRemoveUserIds: [],//选中将要移出项目的用户编号
+    projectUserList: [],//保存的项目所属人员
+    // projectUserIds: []
+    labelTreeValue: [],//标签树值
+    labelTreeData: [],//标签树数据
   }
 
   projectTreeTableColums = [
@@ -157,8 +169,19 @@ class ProjectPage extends PureComponent {
 
   /*********** 添加表单对话框方法**************/
   showAddModal = () => {
-    this.setState({projectUserList: []});
-    this.setState({addFormVisible: true})
+    this.setState({projectUserList: [],addFormVisible: true});
+    const {dispatch} = this.props;
+    dispatch({
+      type: 'label/findTree',
+      callback: res => {
+        let treeData = res.map((node) => {
+          node.title = node.labelName;
+          node.value = node.labelId;
+          return node;
+        })
+        console.log(treeData)
+      }
+    });
   }
 
   getAddFormRef = addFormRef => {
@@ -218,6 +241,8 @@ class ProjectPage extends PureComponent {
     this.setState({projectUserList: userList})
   }
 
+  /***************  标签选择 ****************/
+
 
   render() {
     const {project, loading} = this.props;
@@ -268,6 +293,8 @@ class ProjectPage extends PureComponent {
           userList={this.state.projectUserList}
           projectUserRowSelection={projectUserRowSelection}
           removeProjectUser={this.removeProjectUser}
+          labelTreeData={this.state.labelTreeData}
+          labelTreeValue={this.state.labelTreeValue}
         />
         {/*用户选择列表*/}
         <UserListSelectModal
