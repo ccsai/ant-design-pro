@@ -36,7 +36,7 @@ class ProjectTreeTable extends PureComponent {
 const AddForm = Form.create({name: 'add_form_dlg'})(
   class extends Component {
     render() {
-      const {form, visible, onCancel, openUserListModal,userList,projectUserRowSelection,removeProjectUser,labelTreeData,labelTreeValue} = this.props;
+      const {form, visible, onCancel, openUserListModal, userList, projectUserRowSelection, removeProjectUser, labelTreeData, labelTreeValue, onLabelTreeChange} = this.props;
       const {getFieldDecorator} = form;
       const {TextArea} = Input;
       return (
@@ -94,6 +94,7 @@ const AddForm = Form.create({name: 'add_form_dlg'})(
                   <LabelTreeSelect
                     treeData={labelTreeData}
                     labelTreeValue={labelTreeValue}
+                    onChange={onLabelTreeChange}
                   />
                 )}
               </Form.Item>
@@ -105,7 +106,7 @@ const AddForm = Form.create({name: 'add_form_dlg'})(
   },
 );
 
-@connect(({label,sys, project, loading}) => ({
+@connect(({label, sys, project, loading}) => ({
   label,
   sys,
   project,
@@ -127,6 +128,7 @@ class ProjectPage extends PureComponent {
     labelTreeData: [],//标签树数据
   }
 
+  //项目树表字段
   projectTreeTableColums = [
     {
       title: '编号',
@@ -159,6 +161,7 @@ class ProjectPage extends PureComponent {
     },
   ]
 
+  labelTreeValueMap = {}
 
   componentDidMount() {
     const {dispatch} = this.props;
@@ -169,20 +172,116 @@ class ProjectPage extends PureComponent {
 
   /*********** 添加表单对话框方法**************/
   showAddModal = () => {
-    this.setState({projectUserList: [],addFormVisible: true});
+    this.setState({projectUserList: [], addFormVisible: true,labelTreeValue: []});
     const {dispatch} = this.props;
     dispatch({
       type: 'label/findTree',
       callback: res => {
-        let treeData = res.map((node) => {
-          node.title = node.labelName;
-          node.value = node.labelId;
-          return node;
-        })
-        console.log(treeData)
+        let labelTreeData = this.changelabelTreeNodeName(res);
+        this.setState({labelTreeData: labelTreeData});
+        this.getLabelTreeValueMap(labelTreeData)
       }
     });
   }
+
+  /**
+   * 修改标签树属性名
+   * @param list
+   * @returns {*}
+   */
+  changelabelTreeNodeName = (list) => {
+    let nodes = list.map(({labelId, labelName, children}) => {
+      let node = {
+        key: labelId,
+        value: labelId,
+        title: labelName,
+      }
+      if (children) {
+        node.children = this.changelabelTreeNodeName(children);
+      }
+      return node;
+    })
+    return nodes;
+  }
+
+  /**
+   * 获取标签树节点map
+   * @param list
+   * @param parent
+   * @returns {*}
+   */
+  getLabelTreeValueMap = (list, parent) => {
+    return (list || []).map(({children, value}) => {
+      const node = (this.labelTreeValueMap[value] = {
+        value,
+        parent
+      })
+      node.children = this.getLabelTreeValueMap(children, node)
+      return node;
+    })
+  }
+
+  /**
+   * 递归获取所有标签子节点编号
+   * @param value
+   * @param childreValues
+   * @returns {Array}
+   */
+  getAllLabelTreeChildrenIds = (value,childreValues = []) => {
+    const childrenNodes = this.labelTreeValueMap[value].children;
+    childrenNodes.forEach(({value}) => {
+      childreValues.push(value);
+      this.getAllLabelTreeChildrenIds(value,childreValues);
+    });
+    return childreValues;
+  }
+
+  /**
+   * 递归获取所有父级节点编号
+   * @param value
+   * @param parentValues
+   * @returns {Array}
+   */
+  getAllLabelTreeParentIds = (value,parentValues = []) => {
+    const parentNode = this.labelTreeValueMap[value].parent;
+    if (parentNode){
+      const parentNodeValue = parentNode.value;
+      parentValues.push(parentNodeValue)
+      this.getAllLabelTreeParentIds(parentNodeValue,parentValues);
+    }
+    return parentValues;
+  }
+
+  /**
+   * 递归获取取消选中的父级节点
+   * @param curValue
+   * @param parentValues
+   * @returns {Array}
+   */
+  getNeedToUnSelectLabelTreeParentIds = (curValue,parentValues = []) => {
+    const parentNode = this.labelTreeValueMap[curValue].parent;
+    if (!parentNode){
+      return parentValues;
+    }
+    const {labelTreeValue} = this.state;
+    const parentValue = parentNode.value;
+    const sameLevelNodes = parentNode.children;
+    let isLoop = true;
+    sameLevelNodes.forEach(({value}) => {
+      if (value == curValue){
+        return true;
+      }
+      if (labelTreeValue.indexOf(value) >= 0){
+        isLoop = false;
+      }
+    })
+    if (isLoop){
+      parentValues.push(parentValue);
+      this.getNeedToUnSelectLabelTreeParentIds(parentValue,parentValues);
+    }
+      return parentValues;
+  }
+
 
   getAddFormRef = addFormRef => {
     this.addFormRef = addFormRef;
@@ -195,14 +294,13 @@ class ProjectPage extends PureComponent {
   }
 
   removeProjectUser = () => {
-    let {projectUserList,projectRemoveUserIds} = this.state;
-    if (projectRemoveUserIds.length > 0){
-      for(let i=0;i<projectRemoveUserIds.length;i++){
+    let {projectUserList, projectRemoveUserIds} = this.state;
+    if (projectRemoveUserIds.length > 0) {
+      for (let i = 0; i < projectRemoveUserIds.length; i++) {
         projectUserList.splice(projectUserList.findIndex(item => item.userId == projectRemoveUserIds[i]), 1)
       }
     }
-    console.log(projectUserList)
-    this.setState({projectUserList: projectUserList,projectRemoveUserIds: []})
+    this.setState({projectUserList: projectUserList, projectRemoveUserIds: []})
 
   }
 
@@ -225,24 +323,55 @@ class ProjectPage extends PureComponent {
 
   addSelectedUserList = () => {
     this.setState({userListModalVisible: false})
-    const {selectedUserList,projectUserList} = this.state;
+    const {selectedUserList, projectUserList} = this.state;
     let userList = [
       ...projectUserList,
       ...selectedUserList
     ]
     var hash = {}
-    userList = userList.reduce(function (res,cur) {
-      if (!hash[cur.userId]){
+    userList = userList.reduce(function (res, cur) {
+      if (!hash[cur.userId]) {
         hash[cur.userId] = true;
         res.push(cur);
       }
       return res;
-    },[]);
+    }, []);
     this.setState({projectUserList: userList})
   }
 
   /***************  标签选择 ****************/
-
+  onLabelTreeChange = (labelTreeValue, label, extra) => {
+    console.log(labelTreeValue)
+    this.setState({labelTreeValue: labelTreeValue})
+    console.log(extra)
+    const {triggerValue,selected} = extra;
+    //选中时
+    if (selected){
+      //选中节点编号
+      const addValues = [
+        ...this.getAllLabelTreeParentIds(triggerValue),
+        ...this.getAllLabelTreeChildrenIds(triggerValue)
+      ]
+      addValues.forEach((v) => {
+        if (labelTreeValue.indexOf(v) == -1){
+          labelTreeValue.push(v);
+        }
+      });
+    }else {
+      //取消节点
+      const removeValues = [
+        ...this.getAllLabelTreeChildrenIds(triggerValue),
+        ...this.getNeedToUnSelectLabelTreeParentIds(triggerValue)
+      ]
+      removeValues.forEach((v) => {
+        labelTreeValue.splice(labelTreeValue.findIndex(v1 => v1 == v),1)
+      })
+    }
+    // console.log(this.state.labelTreeValue)
+    // console.log(this.getAllLabelTreeChildrenIds(curValue))
+    // console.log(this.getAllLabelTreeParentIds(curValue))
+    // console.log(this.getNeedToUnSelectLabelTreeParentIds(triggerValue))
+  }
 
   render() {
     const {project, loading} = this.props;
@@ -254,7 +383,8 @@ class ProjectPage extends PureComponent {
       showTotal: total => total,
     }
 
-    {/*移出项目用户*/}
+    {/*移出项目用户*/
+    }
     const projectUserRowSelection = {
       selectedRowKeys: this.state.projectRemoveUserIds,
       onChange: (selectedRowKeys, selectedRows) => {
@@ -262,11 +392,12 @@ class ProjectPage extends PureComponent {
       }
     }
 
-    {/*用户选择的列表设置*/}
+    {/*用户选择的列表设置*/
+    }
     const userRowSelection = {
       selectedRowKeys: this.state.selectedUserIds,
       onChange: (selectedRowKeys, selectedRows) => {
-        this.setState({selectedUserList: selectedRows,selectedUserIds: selectedRowKeys});
+        this.setState({selectedUserList: selectedRows, selectedUserIds: selectedRowKeys});
       }
     }
 
@@ -276,6 +407,8 @@ class ProjectPage extends PureComponent {
           <Button type="primary" onClick={this.showAddModal}>添加</Button>
         </div>
         <div>
+
+          {/*项目表*/}
           <ProjectTreeTable
             columns={this.projectTreeTableColums}
             loading={loading}
@@ -295,6 +428,7 @@ class ProjectPage extends PureComponent {
           removeProjectUser={this.removeProjectUser}
           labelTreeData={this.state.labelTreeData}
           labelTreeValue={this.state.labelTreeValue}
+          onLabelTreeChange={this.onLabelTreeChange}
         />
         {/*用户选择列表*/}
         <UserListSelectModal

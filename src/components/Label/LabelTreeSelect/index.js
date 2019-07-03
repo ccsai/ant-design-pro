@@ -42,25 +42,17 @@ const { SHOW_PARENT } = TreeSelect;
 // ];
 
 class LabelTreeSelect extends Component {
-  // state = {
-  //   value: ['0-0-0'],
-  // };
-
-  onChange = value => {
-    console.log('onChange ', value);
-    this.setState({ value });
-  };
 
   render() {
-    const {treeData,labelTreeValue} = this.props;
-
+    const {treeData,labelTreeValue,onChange} = this.props;
     const tProps = {
       treeData,
       value: labelTreeValue,
-      onChange: this.onChange,
-      treeCheckable: true,
-      showCheckedStrategy: SHOW_PARENT,
+      onChange,
+      // treeCheckable: true,
+      // showCheckedStrategy: SHOW_PARENT,
       searchPlaceholder: '请选择标签...',
+      multiple: true
     };
     return <TreeSelect {...tProps} />;
   }
