@@ -134,12 +134,12 @@ export default {
             {
               path: '/picture/project',
               name: '项目管理',
-              component: './picture/ProjectPage',
+              component: './Picture/ProjectPage',
             },
             {
-              path: '/picture/test',
-              name: '待续',
-              // component: './Sys/UserPage',
+              path: '/picture/label',
+              name: '标签管理',
+              component: './Picture/LabelPage',
             }
           ],
         },

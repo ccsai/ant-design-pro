@@ -18,6 +18,12 @@ export default {
         payload: response,
       });
     },
+    * findTree({payload,callback}, {call}) {
+      const response = yield call(treeTable,payload);
+      if (callback){
+        callback(response);
+      }
+    },
   },
 
   reducers: {
