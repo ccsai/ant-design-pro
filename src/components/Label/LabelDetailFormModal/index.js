@@ -44,7 +44,7 @@ class labelDetailFormModal extends Component {
             {getFieldDecorator('sortNo')(<Input/>)}
           </Form.Item>
           <Form.Item label="显示">
-            {getFieldDecorator('modifier', {
+            {getFieldDecorator('isShow', {
               initialValue: '1',
             })(
               <Radio.Group>

@@ -1,5 +1,5 @@
-import {PureComponent, Component} from 'react';
-import {Table, Button, Modal, Form, Input, Radio, Row, Col, Select} from 'antd';
+import {PureComponent} from 'react';
+import {Table, Button} from 'antd';
 import {connect} from 'dva';
 import LabelDetailFormModal from '@/components/Label/LabelDetailFormModal';
 
@@ -22,6 +22,7 @@ class LabelPage extends PureComponent {
       title: '编号',
       dataIndex: 'labelId',
       key: 'labelId',
+      halign: "center"
     },
     {
       title: '标签名称',
@@ -34,10 +35,12 @@ class LabelPage extends PureComponent {
     {
       title: '排序',
       dataIndex: 'sortNo',
+      sorter: true,
     },
     {
       title: '显示',
       dataIndex: 'isShow',
+      sorter: true,
     },
     {
       title: '操作',
@@ -64,12 +67,13 @@ class LabelPage extends PureComponent {
    * @param sorter
    */
   handleTableChange = (pagination, filters, sorter) => {
-    const {searchValues} = this.state;
+    // const {searchValues} = this.state;
 
     const params = {
       page: pagination.current,
       pageSize: pagination.pageSize,
-      ...searchValues
+      // ...searchValues
+      ...sorter
     }
 
     const {dispatch} = this.props;
@@ -83,7 +87,7 @@ class LabelPage extends PureComponent {
   handleLabelDetailFormOpen = (modifyLabelId) => {
     const {form} = this.labelDetailFormRef.props;
     form.resetFields();
-    this.setState({detailModalVisible:  true,modifyLabelId: modifyLabelId})
+    this.setState({detailModalVisible: true, modifyLabelId: modifyLabelId})
     //上级标签下拉框选项加载
     const {dispatch} = this.props;
     dispatch({
@@ -143,32 +147,32 @@ class LabelPage extends PureComponent {
 
   //提交详情表单
   handleLabelFormSubmit = () => {
-      const {form} = this.labelDetailFormRef.props;
-      form.validateFields((err,values) => {
-        if (err){
-          return;
+    const {form} = this.labelDetailFormRef.props;
+    form.validateFields((err, values) => {
+      if (err) {
+        return;
+      }
+      const {dispatch} = this.props;
+      const {modifyLabelId} = this.state;
+      let url;
+      if (modifyLabelId) {
+        url = 'label/modifyLabel';
+      } else {
+        url = 'label/addLabel';
+        console.log(121)
+      }
+      dispatch({
+        type: url,
+        payload: values,
+        callback: res => {
+          console.log(res)
+          dispatch({
+            type: 'label/findLabelTreeTable'
+          })
+          this.setState({detailModalVisible: false});
         }
-        const {dispatch} = this.props;
-        const {modifyLabelId} = this.state;
-        let url;
-        if (modifyLabelId){
-          url = 'label/modifyLabel';
-        } else {
-          url = 'label/addLabel';
-          console.log(121)
-        }
-        dispatch({
-          type: url,
-          payload: values,
-          callback: res => {
-            console.log(res)
-            dispatch({
-              type: 'label/findLabelTreeTable'
-            })
-            this.setState({detailModalVisible: false});
-          }
-        })
       })
+    })
   }
 
   render() {
@@ -198,6 +202,7 @@ class LabelPage extends PureComponent {
             pagination={paginationProps}
             loading={loading}
             onChange={this.handleTableChange}
+            bordered={true}
           />
         </div>
 

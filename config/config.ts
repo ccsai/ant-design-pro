@@ -140,6 +140,11 @@ export default {
               path: '/picture/label',
               name: '标签管理',
               component: './Picture/LabelPage',
+            },
+            {
+              path: '/picture/dictPage',
+              name: '数据字典',
+              component: './Picture/DictPage',
             }
           ],
         },
