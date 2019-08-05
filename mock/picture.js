@@ -338,6 +338,58 @@ function findProjectDetail() {
   }
 }
 
+function findDictPage(req,res){
+  let list;
+
+  if (req.body.page == 1 || !req.body.page){
+    list = [
+      {
+        dictId: 'a',
+        typeCode: 'isShow',
+        dictKey: '是',
+        dictValue: '1',
+        dictRemark: 'aa',
+        sortNo: 1
+      },
+      {
+        dictId: 'b',
+        typeCode: 'isShow',
+        dictKey: '否',
+        dictValue: '0',
+        dictRemark: '踩踩踩',
+        sortNo: 2
+      },
+
+    ]
+  } else if (req.body.page == 2) {
+    list = [
+      {
+        dictId: 'c',
+        typeCode: 'status',
+        dictKey: '无效',
+        dictValue: '0',
+        dictRemark: '无效',
+        sortNo: 3
+      },
+      {
+        dictId: 'd',
+        typeCode: 'status',
+        dictKey: '有效',
+        dictValue: '1',
+        dictRemark: '有效',
+        sortNo: 4
+      },
+    ]
+  }
+  const result = {
+    code: 200,
+    msg: 'ok',
+    total: 4,
+    list: list
+  }
+  res.json(result)
+}
+
 export default {
   'POST /project/treeTable': treeTable,
   'POST /project/labelTree': findLabelTree,
@@ -345,4 +397,5 @@ export default {
   'POST /label/findLabelDetail': findLabelDetail,
   'POST /label/addLabel': addLabel,
   'POST /label/modifyLabel': modifyLabel,
+  'POST /dict/findDictPage': findDictPage,
 }
